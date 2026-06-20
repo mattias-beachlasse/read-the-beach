@@ -71,6 +71,8 @@
   <button class="tbtn" id="b-present">Present</button>
   <button class="tbtn" id="b-lang">SV</button>
   <button class="tbtn" id="b-share">Share</button>
+  <button class="tbtn" id="b-rotate">Rotate</button>
+  <button class="tbtn" id="b-rec">Rec</button>
   <input id="dname" placeholder="Drill name..." />
   <button class="tbtn" id="b-save">Save</button>
   <button class="tbtn" id="b-png">PNG</button>
@@ -177,7 +179,7 @@
   var CX=100,CY=60,CW=600,CH=300,NETX=CX+CW/2;
   var state={tokens:[],arrows:[],frames:[],notes:"",backdrop:null};
   var history=[];
-  var tool="select", seq=1, gridOn=false, numOn=false, heatOn=false, lang="en", redoStack=[];
+  var tool="select", seq=1, gridOn=false, numOn=false, heatOn=false, lang="en", orient="land", redoStack=[];
   function uid(){return "o"+(seq++)+"_"+Date.now().toString(36)}
   var mem={};
   function lsGet(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}}
@@ -299,6 +301,7 @@
     return s;
   }
   function heatSVG(){if(!heatOn)return "";var s="";state.arrows.forEach(function(a){if(a.kind==="shot"&&a.pts.length){var p=a.pts[a.pts.length-1];s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="36" fill="rgba(232,85,74,.25)"/>';}});return s;}
+  function sceneSVG(){var s=defs()+courtSVG();s+=heatSVG();state.arrows.forEach(function(a){s+=arrowSVG(a)});s+=seqBadges();state.tokens.forEach(function(t){s+=tokenSVG(t)});return s;}
   function render(){
     var s=defs()+courtSVG();
     s+=heatSVG();
@@ -307,10 +310,13 @@
     s+=seqBadges();
     state.tokens.forEach(function(t){s+=tokenSVG(t)});
     s+=handlesSVG();
-    svg.innerHTML=s;
+    if(orient==="port"){svg.setAttribute("viewBox","0 0 470 800");svg.innerHTML='<g transform="translate(470,0) rotate(90)">'+s+'</g>';}
+    else{svg.setAttribute("viewBox","0 0 800 470");svg.innerHTML=s;}
   }
   function esc(x){return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
-  function pt(e){var r=svg.getBoundingClientRect();var x=((e.clientX-r.left)/r.width)*W;var y=((e.clientY-r.top)/r.height)*H;return {x:Math.max(0,Math.min(W,x)),y:Math.max(0,Math.min(H,y))};}
+  function pt(e){var r=svg.getBoundingClientRect();
+    if(orient==="port"){var sx=((e.clientX-r.left)/r.width)*470;var sy=((e.clientY-r.top)/r.height)*800;var px=sy;var py=470-sx;return {x:Math.max(0,Math.min(W,px)),y:Math.max(0,Math.min(H,py))};}
+    var x=((e.clientX-r.left)/r.width)*W;var y=((e.clientY-r.top)/r.height)*H;return {x:Math.max(0,Math.min(W,x)),y:Math.max(0,Math.min(H,y))};}
   function snapshot(){history.push(JSON.stringify(state));if(history.length>40)history.shift();redoStack=[];}
   function undo(){if(!history.length)return;redoStack.push(JSON.stringify(state));state=JSON.parse(history.pop());syncUI();render();renderFrames();}
   function redo(){if(!redoStack.length)return;history.push(JSON.stringify(state));state=JSON.parse(redoStack.pop());syncUI();render();renderFrames();}
@@ -537,6 +543,28 @@
     }catch(e){}
   }
   el("b-lang").onclick=function(){setLang(lang==="en"?"sv":"en");};
+  el("b-rotate").onclick=function(){orient=orient==="land"?"port":"land";render();};
+  el("b-rec").onclick=function(){
+    try{
+      if(!window.MediaRecorder){alert("Video recording isn't supported in this browser. Try PNG or Print.");return;}
+      var c=document.createElement("canvas");c.width=800;c.height=470;var ctx=c.getContext("2d");
+      if(!c.captureStream){alert("Video recording isn't supported here. Try PNG or Print.");return;}
+      var stream=c.captureStream(30);var rec=new MediaRecorder(stream,{mimeType:"video/webm"});var chunks=[];
+      rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data);};
+      rec.onstop=function(){var blob=new Blob(chunks,{type:"video/webm"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(el("dname").value.trim()||"beach-drill")+".webm";a.click();};
+      var img=new Image();var running=true;
+      function frame(){
+        if(!running)return;
+        img.onload=function(){ctx.fillStyle="#e8c79a";ctx.fillRect(0,0,800,470);try{ctx.drawImage(img,0,0,800,470);}catch(e){}};
+        img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="470" viewBox="0 0 800 470">'+sceneSVG()+'</svg>');
+        requestAnimationFrame(frame);
+      }
+      rec.start();frame();playAll();
+      var ms=Math.max(2500,(Math.max(state.frames.length,state.arrows.filter(function(a){return isActionArrow(a.kind);}).length,1))*1000+1500);
+      setTimeout(function(){running=false;try{rec.stop();}catch(e){}},ms);
+      alert("Recording the animation - it'll download as a .webm when it finishes.");
+    }catch(err){alert("Couldn't record here: "+(err&&err.message||err));}
+  };
 
   // backdrop
   el("b-bg").onclick=function(){
