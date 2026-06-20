@@ -359,8 +359,38 @@
   el("frames").addEventListener("click",function(e){var d=e.target.closest("[data-delf]");if(!d)return;state.frames.splice(parseInt(d.getAttribute("data-delf"),10),1);renderFrames();});
   el("b-frame").onclick=function(){state.frames.push(state.tokens.map(function(t){return {id:t.id,x:t.x,y:t.y}}));renderFrames();};
   el("b-clearframes").onclick=function(){state.frames=[];renderFrames();};
-  el("b-play").onclick=function(){playAnim();};
-  function playAnim(){
+  el("b-play").onclick=function(){playRally();};
+  function playRally(){
+    var acts=state.arrows.filter(function(a){return a.kind==="move"||a.kind==="pass"||a.kind==="hit"||a.kind==="arc";});
+    if(acts.length===0){return playFrames();}
+    var ball=null;state.tokens.forEach(function(t){if(t.type==="ball")ball=t;});
+    if(!ball){alert("Add a ball to animate the rally (or capture frames for player movement).");return;}
+    var orig={x:ball.x,y:ball.y};
+    var spd=parseInt(el("speed").value,10)||3;var dur=1400-(spd-1)*220;var loop=el("loop").checked;
+    var i=0;
+    function seg(){
+      if(i>=acts.length){if(loop){i=0;requestAnimationFrame(seg);}else{ball.x=orig.x;ball.y=orig.y;render();}return;}
+      var a=acts[i];var t0=null;var s=a.pts[0];ball.x=s[0];ball.y=s[1];
+      function fr(ts){
+        if(t0==null)t0=ts;var k=Math.min(1,(ts-t0)/dur);
+        var pos=pointOnPath(a,k);ball.x=Math.round(pos.x);ball.y=Math.round(pos.y);render();
+        if(k<1)requestAnimationFrame(fr);else{i++;requestAnimationFrame(seg);}
+      }
+      requestAnimationFrame(fr);
+    }
+    requestAnimationFrame(seg);
+  }
+  function pointOnPath(a,k){
+    var p0=a.pts[0],p1=a.pts[a.pts.length-1];
+    if(a.kind==="arc"){
+      var mx=(p0[0]+p1[0])/2,my=(p0[1]+p1[1])/2;var dx=p1[0]-p0[0],dy=p1[1]-p0[1];var len=Math.sqrt(dx*dx+dy*dy)||1;var off=Math.min(120,len*0.4);
+      var cx=mx-dy/len*off,cy=my+dx/len*off;var mt=1-k;
+      return {x:mt*mt*p0[0]+2*mt*k*cx+k*k*p1[0],y:mt*mt*p0[1]+2*mt*k*cy+k*k*p1[1]};
+    }
+    if(a.kind==="draw"){var n=a.pts.length-1;if(n<1)return {x:p0[0],y:p0[1]};var f=k*n;var idx=Math.floor(f);if(idx>=n)idx=n-1;var lt=f-idx;var A=a.pts[idx],B=a.pts[idx+1];return {x:A[0]+(B[0]-A[0])*lt,y:A[1]+(B[1]-A[1])*lt};}
+    return {x:p0[0]+(p1[0]-p0[0])*k,y:p0[1]+(p1[1]-p0[1])*k};
+  }
+  function playFrames(){
     if(state.frames.length<2){alert("Capture at least 2 frames to animate.");return;}
     var loop=el("loop").checked;
     var spd=parseInt(el("speed").value,10)||3;var dur=1500-(spd-1)*250;
