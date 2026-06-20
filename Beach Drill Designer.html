@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Drill Designer" />
+<meta name="theme-color" content="#0b2e3c" />
 <title>Beach Drill Designer Pro - Read the Beach</title>
 <style>
   :root{
@@ -69,6 +73,7 @@
   <button class="tbtn" id="b-save">Save</button>
   <button class="tbtn" id="b-png">PNG</button>
   <button class="tbtn" id="b-print">Print</button>
+  <button class="tbtn" id="b-book">Playbook</button>
   <button class="tbtn go" id="b-play">&#9654; Play</button>
 </div>
 
@@ -382,7 +387,28 @@
   el("frames").addEventListener("click",function(e){var d=e.target.closest("[data-delf]");if(!d)return;state.frames.splice(parseInt(d.getAttribute("data-delf"),10),1);renderFrames();});
   el("b-frame").onclick=function(){state.frames.push(state.tokens.map(function(t){return {id:t.id,x:t.x,y:t.y}}));renderFrames();};
   el("b-clearframes").onclick=function(){state.frames=[];renderFrames();};
-  el("b-play").onclick=function(){playRally();};
+  el("b-play").onclick=function(){playAll();};
+  function playAll(){
+    var acts=state.arrows.filter(function(a){return isActionArrow(a.kind);});
+    var hasFrames=state.frames.length>=2;
+    if(acts.length===0&&!hasFrames){alert("Draw paths or capture 2+ frames to animate.");return;}
+    var ball=null;state.tokens.forEach(function(t){if(t.type==="ball")ball=t;});
+    var spd=parseInt(el("speed").value,10)||3;var seg=900-(spd-1)*150;var loop=el("loop").checked;
+    var ballSegs=acts.length;var frameSegs=hasFrames?state.frames.length-1:0;
+    var totalSegs=Math.max(ballSegs,frameSegs,1);var totalDur=totalSegs*seg;
+    var orig=state.tokens.map(function(t){return {id:t.id,x:t.x,y:t.y};});
+    var t0=null;
+    function tick(ts){
+      if(t0==null)t0=ts;var prog=Math.min(1,(ts-t0)/totalDur);
+      if(ball&&ballSegs>0){var bp=prog*ballSegs;var bi=Math.min(ballSegs-1,Math.floor(bp));var bk=bp-bi;var pos=pointOnPath(acts[bi],bk);ball.x=Math.round(pos.x);ball.y=Math.round(pos.y);}
+      if(hasFrames){var fpp=prog*frameSegs;var fi=Math.min(frameSegs-1,Math.floor(fpp));var fk=fpp-fi;var from=state.frames[fi],to=state.frames[fi+1];to.forEach(function(tp){if(ball&&tp.id===ball.id)return;var ff=findIn(from,tp.id)||tp;var tok=findToken(tp.id);if(tok){tok.x=Math.round(ff.x+(tp.x-ff.x)*fk);tok.y=Math.round(ff.y+(tp.y-ff.y)*fk);}});}
+      render();
+      if(prog<1){requestAnimationFrame(tick);}
+      else if(loop){t0=null;requestAnimationFrame(tick);}
+      else{orig.forEach(function(o){var tok=findToken(o.id);if(tok){tok.x=o.x;tok.y=o.y;}});render();}
+    }
+    requestAnimationFrame(tick);
+  }
   function playRally(){
     var acts=state.arrows.filter(function(a){return a.kind==="move"||a.kind==="pass"||a.kind==="hit"||a.kind==="arc";});
     if(acts.length===0){return playFrames();}
@@ -507,6 +533,16 @@
     var name=esc(el("dname").value||"Beach drill");var notes=esc(state.notes||"");
     w.document.write('<html><head><title>'+name+'</title><style>body{font-family:Arial;padding:24px;color:#10303d}h1{margin:0 0 6px}svg{width:100%;max-width:760px;border:1px solid #ddd;border-radius:10px}pre{white-space:pre-wrap;font-family:Arial;font-size:14px;margin-top:16px}</style></head><body><h1>'+name+'</h1><div>Read the Beach - Drill Card</div><svg xmlns="'+SVGNS+'" viewBox="0 0 '+W+' '+H+'">'+svg.innerHTML+'</svg><pre>'+notes+'</pre></body></html>');
     w.document.close();setTimeout(function(){try{w.print()}catch(e){}},350);
+  };
+  el("b-book").onclick=function(){
+    var saved=getDrills();if(!saved.length){alert("Save some drills first to build a playbook.");return;}
+    var savedTool=tool;tool="_pb";var cur=JSON.stringify(state);var parts=[];
+    saved.forEach(function(it){state=JSON.parse(JSON.stringify(it.state));render();parts.push({name:it.name,svg:svg.innerHTML,notes:(it.state&&it.state.notes)||""});});
+    state=JSON.parse(cur);tool=savedTool;render();
+    var w=window.open("","_blank");if(!w){alert("Allow pop-ups to print the playbook.");return;}
+    var body=parts.map(function(p){return '<div class="d"><h2>'+esc(p.name)+'</h2><svg xmlns="'+SVGNS+'" viewBox="0 0 '+W+' '+H+'">'+p.svg+'</svg><pre>'+esc(p.notes)+'</pre></div>';}).join("");
+    w.document.write('<html><head><title>Read the Beach - Playbook</title><style>body{font-family:Arial;color:#10303d;padding:20px}.d{page-break-after:always;margin-bottom:30px}h2{margin:0 0 6px}svg{width:100%;max-width:740px;border:1px solid #ddd;border-radius:10px}pre{white-space:pre-wrap;font-family:Arial;font-size:13px}</style></head><body><h1>Read the Beach - Drill Playbook</h1>'+body+'</body></html>');
+    w.document.close();setTimeout(function(){try{w.print()}catch(e){}},400);
   };
   el("b-export").onclick=function(){var a=document.createElement("a");a.download=(el("dname").value.trim()||"beach-drill")+".json";a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify({name:el("dname").value,state:state}));a.click();};
   el("b-import").onclick=function(){var inp=document.createElement("input");inp.type="file";inp.accept="application/json";inp.onchange=function(){var f=inp.files[0];if(!f)return;var fr=new FileReader();fr.onload=function(){try{var o=JSON.parse(fr.result);state=o.state||o;el("dname").value=o.name||"";syncUI();render();renderFrames();}catch(err){alert("Could not read that file.");}};fr.readAsText(f);};inp.click();};
