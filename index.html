@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Read the Beach - Coaching Hub</title>
+<style>
+  :root{
+    --sand-50:#fbf7f0; --sand-100:#f5ede1; --sand-200:#ecdcc6;
+    --ink:#10303d; --ink-soft:#3a5a66; --muted:#6f8893;
+    --teal:#0e8a96; --teal-dark:#0a6670; --teal-50:#e3f4f5;
+    --ocean:#0b2e3c; --coral:#ff6b5e; --coral-dark:#e8554a; --gold:#e8b06b;
+    --white:#ffffff; --line:#e7ddcd; --panel:#ffffff;
+    --shadow:0 8px 30px rgba(16,48,61,.10); --shadow-sm:0 3px 12px rgba(16,48,61,.08);
+    --radius:16px; --maxw:1120px;
+    --font:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  body[data-theme="dark"]{
+    --sand-50:#0e1f27; --sand-100:#13262f; --sand-200:#1d3641;
+    --ink:#eaf2f4; --ink-soft:#bcd2d8; --muted:#8fa9b1;
+    --white:#13262f; --line:#21404b; --panel:#13262f; --teal-50:#13343a;
+    --shadow:0 8px 30px rgba(0,0,0,.4); --shadow-sm:0 3px 12px rgba(0,0,0,.3);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--sand-50);line-height:1.55;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  h1,h2,h3{line-height:1.15;margin:0 0 .4em}
+  h1{font-size:clamp(2.1rem,5vw,3.4rem);font-weight:800;letter-spacing:-.02em}
+  h2{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;letter-spacing:-.01em}
+  h3{font-size:1.12rem;font-weight:700}
+  p{margin:0 0 1em}
+  .eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:.74rem;font-weight:700;color:var(--teal-dark)}
+  body[data-theme="dark"] .eyebrow{color:var(--gold)}
+  .btn{display:inline-block;border:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:.95rem;padding:13px 24px;border-radius:999px;transition:.18s}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--coral);color:#fff;box-shadow:0 6px 18px rgba(255,107,94,.35)}
+  .btn-primary:hover{background:var(--coral-dark)}
+  .btn-ghost{background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.5)}
+  .btn-ghost:hover{background:rgba(255,255,255,.28)}
+  .btn-teal{background:var(--teal);color:#fff}
+  .btn-teal:hover{background:var(--teal-dark)}
+  .btn-sm{padding:9px 16px;font-size:.85rem}
+  .btn-out{background:transparent;border:1.5px solid var(--line);color:var(--ink-soft)}
+  .btn-out:hover{border-color:var(--teal);color:var(--teal-dark)}
+  header.nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--sand-50) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;gap:14px;height:66px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.06rem;cursor:pointer}
+  .brand .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--ocean));display:grid;place-items:center;color:#fff}
+  .nav-links{display:flex;gap:2px;margin-left:auto;align-items:center}
+  .nav-links a{padding:9px 12px;border-radius:9px;font-weight:600;font-size:.9rem;color:var(--ink-soft);cursor:pointer}
+  .nav-links a:hover{background:var(--sand-200);color:var(--ink)}
+  .nav-links a.active{color:var(--teal-dark);background:var(--teal-50)}
+  body[data-theme="dark"] .nav-links a.active{color:var(--gold)}
+  .icon-btn{background:none;border:none;cursor:pointer;font-size:1.05rem;padding:8px;border-radius:8px;color:var(--ink-soft)}
+  .icon-btn:hover{background:var(--sand-200)}
+  .searchbox{display:flex;align-items:center;gap:6px;background:var(--white);border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+  .searchbox input{border:none;background:none;outline:none;font-family:inherit;font-size:.88rem;color:var(--ink);width:130px}
+  .hamb{display:none;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--ink)}
+  @media(max-width:940px){
+    .nav-links{display:none;position:absolute;top:66px;left:0;right:0;flex-direction:column;background:var(--sand-50);border-bottom:1px solid var(--line);padding:10px 22px 16px}
+    .nav-links.open{display:flex}
+    .nav-links a{padding:12px 8px}
+    .searchbox{display:none}
+    .hamb{display:block;margin-left:auto}
+  }
+  .view{display:none;animation:fade .35s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .hero{position:relative;color:#fff;overflow:hidden;background:linear-gradient(180deg,#0a6670 0%,#0b2e3c 100%)}
+  .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(900px 400px at 80% -10%,rgba(232,176,107,.30),transparent 60%),radial-gradient(700px 500px at 10% 110%,rgba(20,163,184,.35),transparent 60%);pointer-events:none}
+  .hero-wave{position:absolute;bottom:-1px;left:0;width:100%;display:block;color:var(--sand-50)}
+  .hero-in{position:relative;z-index:2;padding:74px 0 116px;max-width:760px}
+  .hero h1{color:#fff}
+  .hero .lead{font-size:1.18rem;color:rgba(255,255,255,.9);max-width:600px;margin-bottom:1.6em}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+  .tenets{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:46px;max-width:880px}
+  .tenet{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:16px}
+  .tenet .n{font-size:.78rem;font-weight:800;color:var(--gold);letter-spacing:.08em}
+  .tenet p{margin:.3em 0 0;font-size:.92rem;color:rgba(255,255,255,.92)}
+  @media(max-width:720px){.tenets{grid-template-columns:1fr}}
+  section.band{padding:60px 0}
+  .band.alt{background:var(--white)}
+  .section-head{max-width:640px;margin-bottom:28px}
+  .section-head p{color:var(--muted);font-size:1.04rem}
+  .grid{display:grid;gap:18px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:900px){.g3{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.g2,.g3{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;transition:.18s;position:relative}
+  .card.clickable{cursor:pointer}
+  .card.clickable:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+  .card .thumb{height:116px;background:linear-gradient(135deg,var(--teal-50),#dfeef0);display:grid;place-items:center;color:var(--teal-dark);font-size:1.4rem;font-weight:800;letter-spacing:.05em}
+  body[data-theme="dark"] .card .thumb{background:linear-gradient(135deg,#13343a,#0e2a31);color:var(--gold)}
+  .card .body{padding:16px 18px}
+  .card .tagrow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .tag{font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--sand-200);color:var(--ink-soft)}
+  .tag.tech{background:#e3f4f5;color:#0a6670}.tag.phys{background:#fdeede;color:#b9772e}.tag.psy{background:#efe7fb;color:#6d4bb0}.tag.soc{background:#fde9e7;color:#e8554a}
+  .card h3{margin-bottom:.25em}
+  .card .meta{font-size:.84rem;color:var(--muted)}
+  .star{position:absolute;top:10px;right:12px;font-size:1.1rem;cursor:pointer;color:var(--muted);background:var(--panel);border-radius:50%;width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);z-index:2}
+  .star.on{color:var(--gold)}
+  .corners{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:760px){.corners{grid-template-columns:repeat(2,1fr)}}
+  .corner{border-radius:14px;padding:22px 18px;color:#fff;min-height:140px}
+  .corner h3{color:#fff}.corner p{margin:0;font-size:.88rem;opacity:.92}
+  .c-tech{background:linear-gradient(135deg,#0e8a96,#0a6670)}.c-phys{background:linear-gradient(135deg,#e8a14e,#cf7a23)}.c-psy{background:linear-gradient(135deg,#7d5bc0,#5b3f97)}.c-soc{background:linear-gradient(135deg,#ff6b5e,#e8554a)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+  .chip{border:1.5px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 15px;font-size:.85rem;font-weight:600;cursor:pointer;color:var(--ink-soft)}
+  .chip:hover{border-color:var(--teal)}
+  .chip.active{background:var(--teal);border-color:var(--teal);color:#fff}
+  .course-hero{background:linear-gradient(135deg,#0a6670,#0b2e3c);color:#fff;border-radius:var(--radius);padding:28px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+  .pbar{height:10px;background:rgba(255,255,255,.2);border-radius:999px;overflow:hidden;margin-top:8px}
+  .pbar > span{display:block;height:100%;background:var(--gold);width:0;transition:width .4s}
+  .modlist{margin-top:24px;display:flex;flex-direction:column;gap:12px}
+  .module{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden}
+  .module-head{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer}
+  .module-head:hover{background:var(--sand-50)}
+  .module-num{width:38px;height:38px;flex:none;border-radius:10px;background:var(--teal-50);color:var(--teal-dark);display:grid;place-items:center;font-weight:800}
+  .module-num.done{background:var(--teal);color:#fff}
+  .module-title{font-weight:700}.module-sub{font-size:.82rem;color:var(--muted)}
+  .module-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .pill{font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--sand-200);color:var(--ink-soft)}
+  .pill.live{background:#dff3ec;color:#0a7a52}
+  .chev{transition:.2s;color:var(--muted)}
+  .module.open .chev{transform:rotate(90deg)}
+  .lessons{display:none;border-top:1px solid var(--line);padding:6px 20px 14px}
+  .module.open .lessons{display:block}
+  .lesson{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--sand-200);cursor:pointer}
+  .lesson:last-child{border-bottom:none}
+  .lesson:hover .lt{color:var(--teal-dark)}
+  .lesson .chk{width:22px;height:22px;flex:none;border-radius:6px;border:2px solid var(--line);display:grid;place-items:center;color:#fff;font-size:.8rem}
+  .lesson .chk.on{background:var(--teal);border-color:var(--teal)}
+  .lesson .lt{font-weight:600;font-size:.94rem}.lesson .ld{font-size:.82rem;color:var(--muted)}
+  .lesson .dur{margin-left:auto;font-size:.78rem;color:var(--muted);flex:none}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm)}
+  .crumb{font-size:.85rem;color:var(--muted);margin-bottom:14px;cursor:pointer}
+  .crumb:hover{color:var(--teal-dark)}
+  .videoholder{height:300px;background:linear-gradient(135deg,#0a6670,#0b2e3c);border-radius:12px;display:grid;place-items:center;color:rgba(255,255,255,.8);margin-bottom:22px}
+  .lblock{margin:18px 0}
+  .lblock h4{margin:0 0 4px;font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark)}
+  .rowbtns{display:flex;justify-content:space-between;gap:10px;margin-top:24px;flex-wrap:wrap}
+  .q{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;background:var(--panel)}
+  .q .opt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:var(--panel);border-radius:9px;padding:10px 14px;margin-top:8px;cursor:pointer;font-family:inherit;font-size:.92rem;color:var(--ink)}
+  .q .opt:hover{border-color:var(--teal)}
+  .q .opt.correct{background:#dff3ec;border-color:#0a7a52;color:#0a7a52}
+  .q .opt.wrong{background:#fde9e7;border-color:#e8554a;color:#e8554a}
+  .q .fb{margin-top:10px;font-size:.88rem;color:var(--ink-soft);display:none}
+  .q.answered .fb{display:block}
+  .planner{display:grid;grid-template-columns:1.4fr 1fr;gap:22px}
+  @media(max-width:820px){.planner{grid-template-columns:1fr}}
+  .pick{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--panel)}
+  .pick .t{font-weight:600;font-size:.9rem}
+  .pick .s{font-size:.78rem;color:var(--muted)}
+  .pick button{margin-left:auto}
+  .plan-slot{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px dashed var(--line);font-size:.9rem}
+  .plan-slot .d{margin-left:auto;color:var(--muted);font-size:.8rem}
+  .miniinput{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:.9rem;background:var(--panel);color:var(--ink);width:100%}
+  .empty{color:var(--muted);font-size:.9rem;padding:14px 0}
+  .banner{background:linear-gradient(135deg,#e8b06b,#e8554a);color:#fff;border-radius:var(--radius);padding:18px 22px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:26px}
+  .banner b{font-weight:800}
+  .ring{--p:0;width:88px;height:88px;border-radius:50%;background:conic-gradient(var(--gold) calc(var(--p)*1%),rgba(255,255,255,.25) 0);display:grid;place-items:center;flex:none}
+  .ring .inner{width:64px;height:64px;border-radius:50%;background:var(--ocean);display:grid;place-items:center;color:#fff;font-weight:800}
+  .dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:22px}
+  @media(max-width:820px){.dash-grid{grid-template-columns:1fr}}
+  .cond{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:700px){.cond{grid-template-columns:1fr}}
+  .cond .c{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--panel)}
+  .cond .c .h{font-weight:800;color:var(--teal-dark);margin-bottom:4px}
+  footer{background:var(--ocean);color:rgba(255,255,255,.8);padding:44px 0 30px;margin-top:24px}
+  footer .cols{display:flex;flex-wrap:wrap;gap:40px;justify-content:space-between}
+  footer h4{color:#fff;font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;margin:0 0 12px}
+  footer a{display:block;padding:4px 0;color:rgba(255,255,255,.75);font-size:.92rem;cursor:pointer}
+  footer a:hover{color:#fff}
+  .foot-brand{max-width:280px}.foot-brand .brand{color:#fff;margin-bottom:10px}
+  .copy{margin-top:28px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);font-size:.82rem;opacity:.7}
+  .note{background:var(--teal-50);border:1px dashed var(--teal);border-radius:12px;padding:14px 16px;color:var(--teal-dark);font-size:.9rem;margin-top:22px}
+  body[data-theme="dark"] .note{color:var(--ink)}
+  .center{text-align:center}
+</style>
+</head>
+<body data-theme="light">
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <div class="brand" data-go="dashboard"><span class="mark">V</span> Read the Beach</div>
+    <button class="hamb" id="hamb">=</button>
+    <nav class="nav-links" id="navlinks">
+      <a data-go="dashboard">Dashboard</a>
+      <a data-go="home">Home</a>
+      <a data-go="course">Certification</a>
+      <a data-go="drills">Drills</a>
+      <a data-go="planner">Planner</a>
+      <a data-go="programs">Programs</a>
+      <a data-go="filmroom">Film Room</a><a href="Beach%20Drill%20Designer.html">Designer</a>
+      <span class="searchbox"><span>&#128269;</span><input id="search" placeholder="Search..." autocomplete="off"></span>
+      <button class="icon-btn" id="bm" title="Bookmarks" data-go="saved">&#9733;</button>
+      <button class="icon-btn" id="theme" title="Toggle theme">&#9680;</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+<!-- DASHBOARD -->
+<section class="view active" id="view-dashboard">
+  <div class="wrap band">
+    <div id="onboard"></div>
+    <div class="eyebrow">Your hub</div>
+    <h2 style="margin-bottom:8px">Welcome back, coach</h2>
+    <p class="meta" style="color:var(--muted);margin-bottom:8px">Pick up where you left off, or jump into the tools.</p>
+    <div class="dash-grid">
+      <div class="panel" style="display:flex;gap:16px;align-items:center">
+        <div class="ring" id="ring"><div class="inner" id="ringpct">0%</div></div>
+        <div>
+          <h3 style="margin:0 0 4px">Certification</h3>
+          <div class="meta" style="color:var(--muted)" id="dash-prog">0 of 9 Module-1 lessons</div>
+          <button class="btn btn-teal btn-sm" style="margin-top:10px" id="continue-btn">Continue</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3 style="margin:0 0 8px">Saved</h3>
+        <div id="dash-saved" class="meta" style="color:var(--muted)">Nothing saved yet.</div>
+        <button class="btn btn-out btn-sm" style="margin-top:10px" data-go="saved">View bookmarks</button>
+      </div>
+      <div class="panel">
+        <h3 style="margin:0 0 8px">Recommended next</h3>
+        <div class="meta" style="color:var(--muted);margin-bottom:10px">Build a session in minutes with the Planner.</div>
+        <button class="btn btn-out btn-sm" data-go="planner">Open the Planner</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOME -->
+<section class="view" id="view-home">
+  <div class="hero">
+    <div class="wrap hero-in">
+      <div class="eyebrow" style="color:var(--gold)">Beach volleyball coaching - Level 1</div>
+      <h1>Read the Beach</h1>
+      <p class="lead">Simple skills, sharp decisions, in real conditions. A science-based coaching system built for the two-player game - wind, sun, sand and all.</p>
+      <div class="hero-cta">
+        <button class="btn btn-primary" data-go="course">Start the certification</button>
+        <button class="btn btn-ghost" data-go="planner">Build a practice</button>
+      </div>
+      <div class="tenets">
+        <div class="tenet"><div class="n">TENET 01</div><p><strong>The game teaches the game.</strong> Learn beach by playing beach - small-sided, decision-rich, not dead-ball reps.</p></div>
+        <div class="tenet"><div class="n">TENET 02</div><p><strong>Coach the effect, design the environment.</strong> Few cues, smart constraints. Set the problem; the player finds the answer.</p></div>
+        <div class="tenet"><div class="n">TENET 03</div><p><strong>Two players, every contact matters.</strong> Simplicity and adaptability over complexity. Read, decide, adapt.</p></div>
+      </div>
+    </div>
+    <svg class="hero-wave" viewBox="0 0 1440 90" preserveAspectRatio="none" height="60"><path fill="currentColor" d="M0,40 C240,90 480,0 720,30 C960,60 1200,90 1440,40 L1440,90 L0,90 Z"></path></svg>
+  </div>
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head"><div class="eyebrow">What's inside</div><h2>Everything a beach coach needs</h2><p>A certification, a constraint-game drill library, a practice planner, guided programs and a film room - one system.</p></div>
+      <div class="grid g3">
+        <div class="card clickable" data-go="course"><div class="thumb">CERT</div><div class="body"><h3>Level-1 Certification</h3><p class="meta">10 modules, video lessons, quizzes with feedback, progress tracking.</p></div></div>
+        <div class="card clickable" data-go="drills"><div class="thumb">DRILLS</div><div class="body"><h3>Drill Library</h3><p class="meta">Every drill a constraint game. Filter by skill.</p></div></div>
+        <div class="card clickable" data-go="planner"><div class="thumb">PLANNER</div><div class="body"><h3>Practice Planner</h3><p class="meta">Build a session from drills with timings. Save it.</p></div></div>
+        <div class="card clickable" data-go="programs"><div class="thumb">PROGRAMS</div><div class="body"><h3>Programs &amp; Series</h3><p class="meta">Guided journeys - not loose plans.</p></div></div>
+        <div class="card clickable" data-go="filmroom"><div class="thumb">FILM</div><div class="body"><h3>Film Room</h3><p class="meta">Elite beach technique by skill. Watch the model.</p></div></div>
+      </div>
+    </div>
+  </section>
+  <section class="band alt">
+    <div class="wrap">
+      <div class="section-head"><div class="eyebrow">The framework</div><h2>The whole player - all four corners</h2></div>
+      <div class="corners">
+        <div class="corner c-tech"><h3>Technical / Tactical</h3><p>Skills, reads and decisions - trained together.</p></div>
+        <div class="corner c-phys"><h3>Physical</h3><p>Moving and jumping in sand, conditioning.</p></div>
+        <div class="corner c-psy"><h3>Psychological</h3><p>Focus, routines, confidence under pressure.</p></div>
+        <div class="corner c-soc"><h3>Social / Partnership</h3><p>Communication, roles, the two-person team.</p></div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<!-- COURSE -->
+<section class="view" id="view-course">
+  <div class="wrap band">
+    <div class="eyebrow">Certification</div>
+    <h2 style="margin-bottom:18px">Level-1 Beach Coaching Certification</h2>
+    <div class="course-hero">
+      <div><div style="font-size:1.15rem;font-weight:700">Read the Beach - Level 1</div><div style="opacity:.85;font-size:.92rem;margin-top:4px">10 modules, self-paced, quizzes with feedback</div></div>
+      <div style="min-width:230px">
+        <div style="display:flex;justify-content:space-between;font-size:.85rem"><span>Your progress</span><span id="pct">0%</span></div>
+        <div class="pbar"><span id="pbar"></span></div>
+        <div style="font-size:.8rem;opacity:.8;margin-top:6px"><span id="pcount">0</span> of 9 Module-1 lessons - <a style="text-decoration:underline;cursor:pointer" data-go="quiz">take the quiz</a></div>
+      </div>
+    </div>
+    <div class="modlist" id="modlist"></div>
+    <div class="note">Module 1 is live: click any lesson to open it, and tick it complete. Other modules are placeholders for your content.</div>
+  </div>
+</section>
+
+<!-- LESSON DETAIL -->
+<section class="view" id="view-lesson">
+  <div class="wrap band">
+    <div class="crumb" data-go="course">&#8592; Back to certification</div>
+    <div class="panel" id="lesson-panel"></div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section class="view" id="view-quiz">
+  <div class="wrap band">
+    <div class="crumb" data-go="course">&#8592; Back to certification</div>
+    <div class="eyebrow">Module 1 - Quiz</div>
+    <h2 style="margin-bottom:8px">Check your understanding</h2>
+    <p class="meta" style="color:var(--muted);margin-bottom:20px">Feedback after each answer - that's the retrieval effect at work.</p>
+    <div id="quiz-wrap"></div>
+    <div id="quiz-score" class="note" style="display:none"></div>
+  </div>
+</section>
+
+<!-- DRILLS -->
+<section class="view" id="view-drills">
+  <div class="wrap band">
+    <div class="eyebrow">Drill Library</div>
+    <h2 style="margin-bottom:6px">Constraint games, filterable by skill</h2>
+    <p class="meta" style="color:var(--muted);margin-bottom:22px">A goal, a constraint, a scoring rule. <em>Samples shown.</em></p>
+    <div class="chips" id="drill-chips"></div>
+    <div class="grid g3" id="drill-grid"></div>
+  </div>
+</section>
+
+<!-- PLANNER -->
+<section class="view" id="view-planner">
+  <div class="wrap band">
+    <div class="eyebrow">Practice Planner</div>
+    <h2 style="margin-bottom:6px">Build a session in minutes</h2>
+    <p class="meta" style="color:var(--muted);margin-bottom:22px">Add drills, set minutes, save the plan. The thing no off-the-shelf coaching app does well.</p>
+    <div class="planner">
+      <div>
+        <h3 style="margin:0 0 12px">Drill library</h3>
+        <div id="planner-picks"></div>
+      </div>
+      <div>
+        <div class="panel">
+          <h3 style="margin:0 0 4px">Your plan</h3>
+          <div class="meta" style="color:var(--muted)">Total: <b id="plan-total">0</b> min</div>
+          <div id="plan-slots" style="margin:12px 0"></div>
+          <input class="miniinput" id="plan-name" placeholder="Name this plan (e.g. Tue - serving)" style="margin-bottom:10px">
+          <button class="btn btn-teal btn-sm" id="save-plan">Save plan</button>
+        </div>
+        <div class="panel" style="margin-top:16px">
+          <h3 style="margin:0 0 8px">Saved plans</h3>
+          <div id="saved-plans"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRAMS -->
+<section class="view" id="view-programs">
+  <div class="wrap band">
+    <div class="eyebrow">Programs &amp; Series</div>
+    <h2 style="margin-bottom:6px">Guided journeys, not loose plans</h2>
+    <p class="meta" style="color:var(--muted);margin-bottom:22px">Ordered sequences of sessions. Click one to see the journey.</p>
+    <div class="grid g2" id="program-grid"></div>
+  </div>
+</section>
+
+<!-- PROGRAM DETAIL -->
+<section class="view" id="view-program">
+  <div class="wrap band">
+    <div class="crumb" data-go="programs">&#8592; Back to programs</div>
+    <div class="panel" id="program-panel"></div>
+  </div>
+</section>
+
+<!-- FILM ROOM -->
+<section class="view" id="view-filmroom">
+  <div class="wrap band">
+    <div class="eyebrow">Film Room</div>
+    <h2 style="margin-bottom:6px">Watch the model</h2>
+    <p class="meta" style="color:var(--muted);margin-bottom:22px">Elite beach technique by skill - learning by watching. <em>Samples shown.</em></p>
+    <div class="grid g3" id="film-grid"></div>
+  </div>
+</section>
+
+<!-- SAVED -->
+<section class="view" id="view-saved">
+  <div class="wrap band">
+    <div class="eyebrow">Saved</div>
+    <h2 style="margin-bottom:6px">Your bookmarks</h2>
+    <p class="meta" style="color:var(--muted);margin-bottom:22px">Star anything to keep it here.</p>
+    <div class="grid g3" id="saved-grid"></div>
+  </div>
+</section>
+
+<!-- SEARCH RESULTS -->
+<section class="view" id="view-search">
+  <div class="wrap band">
+    <div class="eyebrow">Search</div>
+    <h2 style="margin-bottom:6px" id="search-head">Results</h2>
+    <div class="grid g3" id="search-grid" style="margin-top:18px"></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap cols">
+    <div class="foot-brand"><div class="brand"><span class="mark">V</span> Read the Beach</div><p style="font-size:.9rem">Simple skills, sharp decisions, in real conditions.</p></div>
+    <div><h4>Learn</h4><a data-go="course">Certification</a><a data-go="drills">Drills</a><a data-go="planner">Planner</a><a data-go="programs">Programs</a><a data-go="filmroom">Film Room</a><a href="Beach%20Drill%20Designer.html">Designer</a></div>
+    <div><h4>The system</h4><a data-go="home">Philosophy</a><a data-go="dashboard">Dashboard</a></div>
+    <div><h4>Account</h4><a>Log in</a><a>Sign up</a><a>Contact</a></div>
+  </div>
+  <div class="wrap copy">(c) 2026 Read the Beach - Coaching Hub - working draft v7. Built for Mattias.</div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var mem={};
+  function get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}}
+  function set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}
+  function getJSON(k,d){try{var v=get(k);return v?JSON.parse(v):d}catch(e){return d}}
+  function setJSON(k,v){set(k,JSON.stringify(v))}
+
+  var module1=[
+    {t:"Stop teaching the way you were taught",d:"Coach the game you want to see.",dur:"5 min",idea:"Most beach coaching is inherited habit. How players learn movement is a studied science - and it often says the opposite of tradition.",cue:"Coach the game you want to see, not the drill you were given.",game:"Run a tradition drill, then the same skill as a tiny game. Ask players which felt like a match."},
+    {t:"Skill is a rule, not a recording",d:"Varied reps beat identical reps.",dur:"5 min",idea:"Players build an adaptable rule for solving a ball, not one perfect rep. Varied practice builds a skill that works on the ball that actually comes.",cue:"No two balls in a match are the same - so no two reps should be either.",game:"Never feed the same ball twice; vary depth, speed and spin on purpose."},
+    {t:"Make practice look like the beach",d:"Train in real conditions.",dur:"5 min",idea:"We learn what we practise, in the conditions we practise it. Reading a live server in real wind is part of the skill.",cue:"If it never happens in a match, be suspicious of practising it.",game:"Train serve-receive off a live server, not a coach toss."},
+    {t:"Design the problem, don't dictate the answer",d:"Set the constraint, let skill emerge.",dur:"6 min",idea:"Change the task - court size, scoring, targets - so the right solution emerges. You set the problem; the body finds the answer and owns it.",cue:"Set the constraint, let the skill emerge.",game:"Want deeper serving? Only score serves landing in the back third."},
+    {t:"Messy beats tidy: random over blocked",d:"Mixed practice retains better.",dur:"6 min",idea:"Blocked practice looks clean today and fades next week. Mixing skills and decisions looks messier now but transfers far better.",cue:"If practice looks too clean, they'll forget it.",game:"Play rallies where players serve, pass and decide in the same point."},
+    {t:"Show, don't tell",d:"One demo beats ten corrections.",dur:"4 min",idea:"A clear demonstration teaches movement faster than a paragraph. Show the one thing that matters and cut the rest.",cue:"One good demo and one cue beats ten corrections.",game:"Demo it, name one focus, let them go. Don't narrate ten points."},
+    {t:"Coach the effect, not the elbow",d:"External cues win.",dur:"6 min",idea:"Cueing the outcome ('drive it at the back cone') beats cueing body parts. Aim attention outward.",cue:"Point their attention at the ball and target, not their body.",game:"Rewrite your three most-used cues from body-part to target/effect."},
+    {t:"Confidence and choice are not soft",d:"Autonomy speeds learning.",dur:"5 min",idea:"Players learn faster with real choices, a reason for the task, and reps they can win. Confidence measurably improves learning.",cue:"A player who feels capable and in control learns faster.",game:"Give a choice ('pick the serve to master today'), the why, and winnable reps."},
+    {t:"Get more quality touches",d:"Measure a session by touches.",dur:"6 min",idea:"Two players already gives huge touch counts - protect it. Cut lines, cut talking, keep balls flying.",cue:"Every second in a line is a second not learning.",game:"More balls, smaller groups, fewer queues; count meaningful contacts."}
+  ];
+  var modules=[
+    {n:1,title:"How Beach Players Learn",sub:"The coaching foundation",live:true,lessons:module1},
+    {n:2,title:"The Beach Game: What Wins",sub:"Side-out, margins and conditions",live:false},
+    {n:3,title:"Serving",sub:"Keys plus strategy",live:false},
+    {n:4,title:"Passing / Serve-Receive",sub:"Two-person coverage",live:false},
+    {n:5,title:"Setting",sub:"Hand and bump setting",live:false},
+    {n:6,title:"Attacking and Shot-Making",sub:"Read the court",live:false},
+    {n:7,title:"Blocking and Block/Pull",sub:"The defining decision",live:false},
+    {n:8,title:"Defending and Digging",sub:"Read and transition",live:false},
+    {n:9,title:"Partnership and Match Play",sub:"Two become a team",live:false},
+    {n:10,title:"Physical Prep for Sand",sub:"Move, jump, last",live:false}
+  ];
+  var drills=[
+    {id:"d1",icon:"SRV",title:"Zone Serving Game",tag:["Serving","tech"],meta:"Only back-third serves score. First to 5.",cat:"serving",dur:12},
+    {id:"d2",icon:"PAS",title:"Live Serve-Receive Ladder",tag:["Passing","tech"],meta:"Pass to target to climb; miss and drop.",cat:"passing",dur:15},
+    {id:"d3",icon:"SET",title:"Set-to-Window Game",tag:["Setting","soc"],meta:"Score only off a clean attackable set.",cat:"setting",dur:12},
+    {id:"d4",icon:"ATK",title:"Shot-Selection vs Defender",tag:["Attacking","tech"],meta:"Open-court reads beat hard swings.",cat:"attacking",dur:15},
+    {id:"d5",icon:"DEF",title:"Block-or-Pull Reads",tag:["Blocking","soc"],meta:"Caller decides; score the right choice.",cat:"defense",dur:14},
+    {id:"d6",icon:"WRM",title:"Wind-Switch Warmup",tag:["Physical","phys"],meta:"Switch ends every 3 - adapt to conditions.",cat:"warmup",dur:8}
+  ];
+  var drillFilters=[["All","all"],["Warmup","warmup"],["Serving","serving"],["Passing","passing"],["Setting","setting"],["Attacking","attacking"],["Defense","defense"]];
+  var programs=[
+    {id:"p1",title:"Your First 8 Sessions",tag:["Beginner","tech"],meta:"Foundations arc - 8 practices in order.",sessions:["Touches and tempo","Serve and pass basics","Reading the server","Side-out game","Setting your partner","Shot selection intro","Block or pull","Play day - put it together"]},
+    {id:"p2",title:"12-Week Competitive Block",tag:["Advanced","psy"],meta:"Season program - peak for a tournament.",sessions:["Base week","Serve pressure","Defense systems","Transition speed","Scouting and plans","Taper and play"]},
+    {id:"p3",title:"Grab and Go: 2-Hour Session",tag:["Any level","tech"],meta:"One ready-to-run full practice.",sessions:["Warmup","Serve and pass block","Side-out games","Match play"]},
+    {id:"p4",title:"Youth Beach Starter",tag:["Youth","soc"],meta:"Fun-first, games-based intro for juniors.",sessions:["Games and movement","Catch-set-throw","Mini-court rallies","Tournament fun day"]}
+  ];
+  var film=[
+    {id:"f1",icon:"SRV",title:"Serving - elite models",tag:["Serving","tech"],meta:"Float and jump serves, multiple angles."},
+    {id:"f2",icon:"PAS",title:"Passing setup and platform",tag:["Passing","tech"],meta:"Posture, platform, reading the server."},
+    {id:"f3",icon:"ATK",title:"Attacking and shot selection",tag:["Attacking","tech"],meta:"Reading the block, choosing the shot."},
+    {id:"f4",icon:"DEF",title:"Defense and transition reads",tag:["Defense","soc"],meta:"Block-or-pull and dig-to-attack."}
+  ];
+  var quiz=[
+    {q:"A drill of 20 identical cross-court hits off a toss mostly violates which idea?",opts:["Variability / specificity","Being too tiring","Not enough talking"],a:0,fb:"Identical reps in fake conditions miss both variability and specificity."},
+    {q:"True or false: messy, mixed practice is usually worse for long-term learning.",opts:["True","False"],a:1,fb:"False - contextual interference: mixed/random practice retains and transfers better."},
+    {q:"Best rewrite of 'snap your wrist on the serve'?",opts:["Bend your elbow more","Drive the ball down at the back line","Toss higher"],a:1,fb:"External cue - point attention at the effect/target, not the body part."},
+    {q:"You want deeper serving without saying so. What do you change?",opts:["Give a long lecture","Only score serves landing in the back third","Add more reps"],a:1,fb:"A task constraint makes the behaviour emerge - constraints-led coaching."},
+    {q:"Why 'show one thing, then play' over detailed instruction?",opts:["It's faster for the coach","Demonstrations plus information reduction teach movement better","Players prefer it"],a:1,fb:"Demonstration + reducing information beats a wall of verbal cues."}
+  ];
+
+  var current={lesson:0,program:null};
+  function el(id){return document.getElementById(id)}
+  function tagHtml(t){return '<span class="tag '+t[1]+'">'+t[0]+'</span>'}
+
+  // ---- bookmarks ----
+  function bmList(){return getJSON("rtb_bm",[])}
+  function isBm(id){return bmList().indexOf(id)>=0}
+  function toggleBm(id){var l=bmList();var i=l.indexOf(id);if(i>=0)l.splice(i,1);else l.push(id);setJSON("rtb_bm",l);}
+  function allItems(){
+    var out=[];
+    drills.forEach(function(d){out.push({id:d.id,icon:d.icon,title:d.title,meta:d.meta,tag:d.tag,kind:"drill"})});
+    programs.forEach(function(p){out.push({id:p.id,icon:"PRG",title:p.title,meta:p.meta,tag:p.tag,kind:"program"})});
+    film.forEach(function(f){out.push({id:f.id,icon:f.icon,title:f.title,meta:f.meta,tag:f.tag,kind:"film"})});
+    module1.forEach(function(L,i){out.push({id:"l"+i,icon:"LSN",title:L.t,meta:L.d,tag:["Lesson","psy"],kind:"lesson",li:i})});
+    return out;
+  }
+  function cardHtml(it){
+    return '<div class="card clickable" data-open="'+it.kind+':'+(it.li!=null?it.li:it.id)+'">'+
+      '<div class="star'+(isBm(it.id)?' on':'')+'" data-star="'+it.id+'">'+(isBm(it.id)?'★':'☆')+'</div>'+
+      '<div class="thumb">'+it.icon+'</div><div class="body"><div class="tagrow">'+tagHtml(it.tag)+'</div>'+
+      '<h3>'+it.title+'</h3><p class="meta">'+it.meta+'</p></div></div>';
+  }
+
+  // ---- render modules ----
+  function renderModules(){
+    var c=el("modlist"); c.innerHTML="";
+    modules.forEach(function(m){
+      var done=moduleDone(m);
+      var w=document.createElement("div"); w.className="module";
+      var h=document.createElement("div"); h.className="module-head";
+      h.innerHTML='<div class="module-num'+(done?' done':'')+'">'+(done?'✓':m.n)+'</div>'+
+        '<div><div class="module-title">Module '+m.n+' - '+m.title+'</div><div class="module-sub">'+m.sub+'</div></div>'+
+        '<div class="module-right"><span class="pill '+(m.live?'live':'')+'">'+(m.live?'Live':'Soon')+'</span>'+(m.lessons?'<span class="chev">&gt;</span>':'')+'</div>';
+      w.appendChild(h);
+      if(m.lessons){
+        var ls=document.createElement("div"); ls.className="lessons";
+        m.lessons.forEach(function(L,i){
+          var on=get("rtb_m1_l"+i)==="1";
+          var row=document.createElement("div"); row.className="lesson"; row.setAttribute("data-lesson",i);
+          row.innerHTML='<div class="chk'+(on?' on':'')+'" data-chk="'+i+'">'+(on?'✓':'')+'</div>'+
+            '<div><div class="lt">'+(m.n+'.'+(i+1))+'  '+L.t+'</div><div class="ld">'+L.d+'</div></div>'+
+            '<div class="dur">'+L.dur+'</div>';
+          ls.appendChild(row);
+        });
+        w.appendChild(ls);
+        h.addEventListener("click",function(){w.classList.toggle("open")});
+        ls.addEventListener("click",function(e){
+          var ck=e.target.closest("[data-chk]");
+          if(ck){var i=ck.getAttribute("data-chk");var now=get("rtb_m1_l"+i)==="1";set("rtb_m1_l"+i,now?"0":"1");renderModules();updateProgress();w.classList.add("open");return;}
+          var row=e.target.closest("[data-lesson]");
+          if(row){openLesson(parseInt(row.getAttribute("data-lesson"),10));}
+        });
+      }
+      c.appendChild(w);
+    });
+  }
+  function moduleDone(m){if(!m.lessons)return false;for(var i=0;i<m.lessons.length;i++){if(get("rtb_m1_l"+i)!=="1")return false;}return true;}
+  function doneCount(){var n=0;for(var i=0;i<module1.length;i++){if(get("rtb_m1_l"+i)==="1")n++;}return n;}
+  function updateProgress(){
+    var done=doneCount(),pct=Math.round(done/module1.length*100);
+    if(el("pbar"))el("pbar").style.width=pct+"%";
+    if(el("pct"))el("pct").textContent=pct+"%";
+    if(el("pcount"))el("pcount").textContent=done;
+    if(el("ring")){el("ring").style.setProperty("--p",pct);el("ringpct").textContent=pct+"%";el("dash-prog").textContent=done+" of "+module1.length+" Module-1 lessons";}
+  }
+
+  // ---- lesson detail ----
+  function openLesson(i){
+    current.lesson=i; var L=module1[i]; var on=get("rtb_m1_l"+i)==="1";
+    el("lesson-panel").innerHTML=
+      '<div class="eyebrow">Module 1 - Lesson '+(i+1)+' of '+module1.length+'</div>'+
+      '<h2 style="margin:6px 0 14px">'+L.t+'</h2>'+
+      '<div class="videoholder">[ video lesson - '+L.dur+' ]</div>'+
+      '<div class="lblock"><h4>The idea</h4><p>'+L.idea+'</p></div>'+
+      '<div class="lblock"><h4>The cue</h4><p><strong>'+L.cue+'</strong></p></div>'+
+      '<div class="lblock"><h4>On the sand (constraint game)</h4><p>'+L.game+'</p></div>'+
+      '<div class="rowbtns">'+
+        '<button class="btn btn-out btn-sm" id="l-prev">&#8592; Previous</button>'+
+        '<button class="btn '+(on?'btn-out':'btn-teal')+' btn-sm" id="l-done">'+(on?'✓ Completed':'Mark complete')+'</button>'+
+        '<button class="btn btn-out btn-sm" id="l-next">Next &#8594;</button>'+
+      '</div>';
+    el("l-prev").onclick=function(){openLesson((i-1+module1.length)%module1.length)};
+    el("l-next").onclick=function(){openLesson((i+1)%module1.length)};
+    el("l-done").onclick=function(){var now=get("rtb_m1_l"+i)==="1";set("rtb_m1_l"+i,now?"0":"1");updateProgress();renderModules();openLesson(i);};
+    go("lesson");
+  }
+
+  // ---- quiz ----
+  function renderQuiz(){
+    var w=el("quiz-wrap"); w.innerHTML=""; var answered=0,correct=0;
+    quiz.forEach(function(Q,qi){
+      var d=document.createElement("div"); d.className="q";
+      var opts=Q.opts.map(function(o,oi){return '<button class="opt" data-oi="'+oi+'">'+o+'</button>'}).join("");
+      d.innerHTML='<div style="font-weight:700">'+(qi+1)+'. '+Q.q+'</div>'+opts+'<div class="fb"></div>';
+      d.addEventListener("click",function(e){
+        var b=e.target.closest(".opt"); if(!b||d.classList.contains("answered"))return;
+        var oi=parseInt(b.getAttribute("data-oi"),10);
+        d.classList.add("answered"); answered++;
+        var btns=d.querySelectorAll(".opt");
+        btns[Q.a].classList.add("correct");
+        if(oi===Q.a){correct++;}else{b.classList.add("wrong");}
+        d.querySelector(".fb").textContent=(oi===Q.a?"Correct. ":"Not quite. ")+Q.fb;
+        if(answered===quiz.length){var s=el("quiz-score");s.style.display="block";s.textContent="You scored "+correct+" / "+quiz.length+". Spaced retrieval like this is exactly why the quizzes work.";set("rtb_quiz1",String(correct));}
+      });
+      w.appendChild(d);
+    });
+    el("quiz-score").style.display="none";
+  }
+
+  // ---- generic grids ----
+  function renderGrid(id,arr){var g=el(id);g.innerHTML="";arr.forEach(function(it){g.insertAdjacentHTML("beforeend",cardHtml(it))});if(!arr.length)g.innerHTML='<p class="empty">Nothing here yet.</p>';}
+  function renderDrills(cat){
+    var items=allItems().filter(function(it){return it.kind==="drill"});
+    if(cat&&cat!=="all"){var ids=drills.filter(function(d){return d.cat===cat}).map(function(d){return d.id});items=items.filter(function(it){return ids.indexOf(it.id)>=0});}
+    renderGrid("drill-grid",items);
+  }
+  function chipMarkup(){
+    var c=el("drill-chips"); c.innerHTML="";
+    drillFilters.forEach(function(f,i){
+      var b=document.createElement("button"); b.className=(i===0)?"chip active":"chip"; b.textContent=f[0];
+      b.addEventListener("click",function(){
+        var all=c.querySelectorAll(".chip"); for(var x=0;x<all.length;x++){all[x].classList.remove("active");}
+        b.classList.add("active"); renderDrills(f[1]);
+      });
+      c.appendChild(b);
+    });
+  }
+  function renderPrograms(){
+    var g=el("program-grid"); g.innerHTML="";
+    programs.forEach(function(p){
+      g.insertAdjacentHTML("beforeend",
+        '<div class="card clickable" data-open="program:'+p.id+'"><div class="star'+(isBm(p.id)?' on':'')+'" data-star="'+p.id+'">'+(isBm(p.id)?'★':'☆')+'</div>'+
+        '<div class="thumb">'+p.sessions.length+' sessions</div><div class="body"><div class="tagrow">'+tagHtml(p.tag)+'</div><h3>'+p.title+'</h3><p class="meta">'+p.meta+'</p></div></div>');
+    });
+  }
+  function openProgram(id){
+    var p=null;programs.forEach(function(x){if(x.id===id)p=x;}); if(!p)return; current.program=id;
+    var rows=p.sessions.map(function(s,i){return '<div class="plan-slot"><b style="color:var(--teal-dark)">'+(i+1)+'</b> '+s+'<span class="d">session</span></div>'}).join("");
+    el("program-panel").innerHTML='<div class="eyebrow">Program</div><h2 style="margin:6px 0 8px">'+p.title+'</h2><p class="meta" style="color:var(--muted)">'+p.meta+'</p>'+
+      '<div style="margin-top:16px">'+rows+'</div>'+
+      '<div class="note">Each session links to a practice plan you build in the Planner. This is the "deliver a journey" idea in action.</div>';
+    go("program");
+  }
+  function renderFilm(){renderGrid("film-grid",allItems().filter(function(it){return it.kind==="film"}));}
+  function renderSaved(){
+    var ids=bmList(); var items=allItems().filter(function(it){return ids.indexOf(it.id)>=0});
+    renderGrid("saved-grid",items);
+    var ds=el("dash-saved");
+    ds.textContent=ids.length?(ids.length+" item"+(ids.length>1?"s":"")+" saved."):"Nothing saved yet.";
+  }
+
+  // ---- planner ----
+  function renderPicks(){
+    var c=el("planner-picks"); c.innerHTML="";
+    drills.forEach(function(d){
+      c.insertAdjacentHTML("beforeend",
+        '<div class="pick"><div><div class="t">'+d.title+'</div><div class="s">'+tagHtml(d.tag)+' '+d.dur+' min</div></div>'+
+        '<button class="btn btn-out btn-sm" data-add="'+d.id+'">+ Add</button></div>');
+    });
+  }
+  function planList(){return getJSON("rtb_curplan",[])}
+  function renderPlan(){
+    var items=planList(); var slots=el("plan-slots"); slots.innerHTML=""; var tot=0;
+    if(!items.length){slots.innerHTML='<div class="empty">No drills yet - add from the left.</div>';}
+    items.forEach(function(it,idx){
+      tot+=it.dur;
+      slots.insertAdjacentHTML("beforeend",'<div class="plan-slot">'+it.title+'<span class="d">'+it.dur+' min</span><button class="btn btn-out btn-sm" data-rm="'+idx+'" style="margin-left:8px">x</button></div>');
+    });
+    el("plan-total").textContent=tot;
+  }
+  function renderSavedPlans(){
+    var sp=getJSON("rtb_plans",[]); var c=el("saved-plans"); c.innerHTML="";
+    if(!sp.length){c.innerHTML='<div class="empty">No saved plans yet.</div>';return;}
+    sp.forEach(function(p,i){
+      c.insertAdjacentHTML("beforeend",'<div class="plan-slot"><b>'+p.name+'</b><span class="d">'+p.total+' min</span><button class="btn btn-out btn-sm" data-delplan="'+i+'" style="margin-left:8px">delete</button></div>');
+    });
+  }
+
+  // ---- router ----
+  function go(view){
+    var vs=document.querySelectorAll(".view"); for(var i=0;i<vs.length;i++){vs[i].classList.remove("active");}
+    var t=el("view-"+view); if(t)t.classList.add("active");
+    var links=document.querySelectorAll(".nav-links a"); for(var j=0;j<links.length;j++){links[j].classList.toggle("active",links[j].getAttribute("data-go")===view);}
+    var nl=el("navlinks"); if(nl)nl.classList.remove("open");
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  // ---- search ----
+  function runSearch(qstr){
+    qstr=(qstr||"").toLowerCase().trim(); if(!qstr){return;}
+    var res=allItems().filter(function(it){return (it.title+" "+it.meta).toLowerCase().indexOf(qstr)>=0;});
+    el("search-head").textContent='Results for "'+qstr+'" ('+res.length+')';
+    renderGrid("search-grid",res); go("search");
+  }
+
+  // ---- onboarding ----
+  function renderOnboard(){
+    if(get("rtb_onboard")==="done"){el("onboard").innerHTML="";return;}
+    el("onboard").innerHTML='<div class="banner"><div><b>Welcome to your Coaching Hub.</b> Start with Module 1, build a practice in the Planner, and star anything to save it.</div><button class="btn btn-ghost btn-sm" id="ob-x">Got it</button></div>';
+    el("ob-x").onclick=function(){set("rtb_onboard","done");renderOnboard();};
+  }
+
+  // ---- global click + handlers ----
+  document.addEventListener("click",function(e){
+    var navg=e.target.closest("[data-go]");
+    if(navg){e.preventDefault();go(navg.getAttribute("data-go"));return;}
+    var star=e.target.closest("[data-star]");
+    if(star){e.stopPropagation();toggleBm(star.getAttribute("data-star"));renderDrills(document.querySelector("#drill-chips .chip.active")?undefined:undefined);refreshAll();return;}
+    var open=e.target.closest("[data-open]");
+    if(open){var parts=open.getAttribute("data-open").split(":");var kind=parts[0],key=parts[1];
+      if(kind==="lesson")openLesson(parseInt(key,10));
+      else if(kind==="program")openProgram(key);
+      else if(kind==="drill"||kind==="film"){/* could open detail; keep simple */}
+      return;}
+    var add=e.target.closest("[data-add]");
+    if(add){var id=add.getAttribute("data-add");var d=null;drills.forEach(function(x){if(x.id===id)d=x;});if(d){var l=planList();l.push({title:d.title,dur:d.dur});setJSON("rtb_curplan",l);renderPlan();}return;}
+    var rm=e.target.closest("[data-rm]");
+    if(rm){var l=planList();l.splice(parseInt(rm.getAttribute("data-rm"),10),1);setJSON("rtb_curplan",l);renderPlan();return;}
+    var dp=e.target.closest("[data-delplan]");
+    if(dp){var sp=getJSON("rtb_plans",[]);sp.splice(parseInt(dp.getAttribute("data-delplan"),10),1);setJSON("rtb_plans",sp);renderSavedPlans();return;}
+  });
+  function refreshAll(){renderDrills(currentCat());renderPrograms();renderFilm();renderSaved();}
+  function currentCat(){var a=document.querySelector("#drill-chips .chip.active");if(!a)return "all";var idx=Array.prototype.indexOf.call(a.parentNode.children,a);return drillFilters[idx]?drillFilters[idx][1]:"all";}
+
+  el("save-plan").onclick=function(){
+    var items=planList(); if(!items.length){return;}
+    var name=el("plan-name").value.trim()||("Plan "+(getJSON("rtb_plans",[]).length+1));
+    var tot=0;items.forEach(function(x){tot+=x.dur;});
+    var sp=getJSON("rtb_plans",[]); sp.push({name:name,total:tot,items:items}); setJSON("rtb_plans",sp);
+    setJSON("rtb_curplan",[]); el("plan-name").value=""; renderPlan(); renderSavedPlans();
+  };
+  el("continue-btn").onclick=function(){var d=doneCount();openLesson(d<module1.length?d:0);};
+  el("hamb").onclick=function(){el("navlinks").classList.toggle("open");};
+  el("theme").onclick=function(){var b=document.body;var nt=b.getAttribute("data-theme")==="dark"?"light":"dark";b.setAttribute("data-theme",nt);set("rtb_theme",nt);};
+  var si=el("search");
+  si.addEventListener("keydown",function(e){if(e.key==="Enter")runSearch(si.value);});
+
+  // ---- init ----
+  (function init(){
+    var th=get("rtb_theme"); if(th)document.body.setAttribute("data-theme",th);
+    renderModules(); updateProgress(); chipMarkup(); renderDrills("all"); renderPrograms(); renderFilm(); renderSaved();
+    renderPicks(); renderPlan(); renderSavedPlans(); renderQuiz(); renderOnboard();
+  })();
+})();
+</script>
+</body>
+</html>
