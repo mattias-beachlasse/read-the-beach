@@ -69,6 +69,8 @@
   <button class="tbtn" id="b-grid">Grid</button>
   <button class="tbtn" id="b-num">#</button>
   <button class="tbtn" id="b-present">Present</button>
+  <button class="tbtn" id="b-lang">SV</button>
+  <button class="tbtn" id="b-share">Share</button>
   <input id="dname" placeholder="Drill name..." />
   <button class="tbtn" id="b-save">Save</button>
   <button class="tbtn" id="b-png">PNG</button>
@@ -107,6 +109,8 @@
     <button class="tool" data-tool="shot"><span class="ic">&#9737;</span>Shot map</button>
     <div class="tgrp">Edit</div>
     <button class="tool" data-tool="_undo"><span class="ic">&#8630;</span>Undo</button>
+    <button class="tool" data-tool="_redo"><span class="ic">&#8631;</span>Redo</button>
+    <button class="tool" data-tool="_heat"><span class="ic">&#9608;</span>Heatmap</button>
     <button class="tool" data-tool="_clear"><span class="ic">&#10005;</span>Clear</button>
   </div>
 
@@ -140,6 +144,7 @@
       <select id="d-diff"><option value="">Level...</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
     </div>
     <select id="d-corner" style="margin-top:5px"><option value="">Corner...</option><option>Technical/Tactical</option><option>Physical</option><option>Psychological</option><option>Social</option></select>
+    <select id="d-module" style="margin-top:5px"><option value="">Module...</option><option>M1 Foundations</option><option>M2 The Game</option><option>M3 Serving</option><option>M4 Passing</option><option>M5 Setting</option><option>M6 Attacking</option><option>M7 Blocking</option><option>M8 Defending</option><option>M9 Match Play</option></select>
 
     <h4>Animation</h4>
     <div id="frames"></div>
@@ -172,7 +177,7 @@
   var CX=100,CY=60,CW=600,CH=300,NETX=CX+CW/2;
   var state={tokens:[],arrows:[],frames:[],notes:"",backdrop:null};
   var history=[];
-  var tool="select", seq=1, gridOn=false, numOn=false;
+  var tool="select", seq=1, gridOn=false, numOn=false, heatOn=false, lang="en", redoStack=[];
   function uid(){return "o"+(seq++)+"_"+Date.now().toString(36)}
   var mem={};
   function lsGet(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}}
@@ -293,8 +298,10 @@
     });
     return s;
   }
+  function heatSVG(){if(!heatOn)return "";var s="";state.arrows.forEach(function(a){if(a.kind==="shot"&&a.pts.length){var p=a.pts[a.pts.length-1];s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="36" fill="rgba(232,85,74,.25)"/>';}});return s;}
   function render(){
     var s=defs()+courtSVG();
+    s+=heatSVG();
     state.arrows.forEach(function(a){s+=arrowSVG(a)});
     if(preview)s+=preview;
     s+=seqBadges();
@@ -304,8 +311,9 @@
   }
   function esc(x){return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
   function pt(e){var r=svg.getBoundingClientRect();var x=((e.clientX-r.left)/r.width)*W;var y=((e.clientY-r.top)/r.height)*H;return {x:Math.max(0,Math.min(W,x)),y:Math.max(0,Math.min(H,y))};}
-  function snapshot(){history.push(JSON.stringify(state));if(history.length>40)history.shift();}
-  function undo(){if(!history.length)return;state=JSON.parse(history.pop());syncUI();render();renderFrames();}
+  function snapshot(){history.push(JSON.stringify(state));if(history.length>40)history.shift();redoStack=[];}
+  function undo(){if(!history.length)return;redoStack.push(JSON.stringify(state));state=JSON.parse(history.pop());syncUI();render();renderFrames();}
+  function redo(){if(!redoStack.length)return;history.push(JSON.stringify(state));state=JSON.parse(redoStack.pop());syncUI();render();renderFrames();}
 
   var drag=null, arrowDraft=null, animId=0;
   function defaultLabel(type){
@@ -373,6 +381,8 @@
     var b=e.target.closest(".tool");if(!b)return;
     var tl=b.getAttribute("data-tool");
     if(tl==="_undo"){undo();return;}
+    if(tl==="_redo"){redo();return;}
+    if(tl==="_heat"){heatOn=!heatOn;b.classList.toggle("active",heatOn);render();return;}
     if(tl==="_clear"){if(confirm("Clear the whole drill?")){snapshot();state.tokens=[];state.arrows=[];state.frames=[];render();renderFrames();}return;}
     tool=tl;
     var all=document.querySelectorAll(".tool");for(var i=0;i<all.length;i++){all[i].classList.remove("active");}
@@ -505,6 +515,28 @@
   el("b-grid").onclick=function(){gridOn=!gridOn;this.classList.toggle("on",gridOn);render();};
   el("b-num").onclick=function(){numOn=!numOn;this.classList.toggle("on",numOn);render();};
   el("b-present").onclick=function(){document.body.classList.toggle("present");setTimeout(render,60);};
+  el("b-share").onclick=function(){
+    var url=location.origin+location.pathname;
+    var ex=document.getElementById("qr-ov");if(ex){ex.parentNode.removeChild(ex);return;}
+    var ov=document.createElement("div");ov.id="qr-ov";
+    ov.style.cssText="position:fixed;inset:0;background:rgba(11,46,60,.7);display:grid;place-items:center;z-index:99";
+    ov.innerHTML='<div style="background:#fff;padding:20px;border-radius:14px;text-align:center;max-width:300px"><h3 style="margin:0 0 10px;font-family:inherit">Open on a phone</h3><img alt="QR" style="width:200px;height:200px" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(url)+'"/><div style="font-size:.75rem;color:#6f8893;margin-top:10px;word-break:break-all">'+url+'</div><button id="qr-x" style="margin-top:12px;border:none;background:#0e8a96;color:#fff;border-radius:8px;padding:8px 16px;cursor:pointer;font-family:inherit">Close</button></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener("click",function(e){if(e.target===ov||e.target.id==="qr-x")ov.parentNode.removeChild(ov);});
+  };
+  var SVDICT={"Select":"Markera","Delete":"Radera","Team A":"Lag A","Team B":"Lag B","Coach":"Tränare","Ball":"Boll","Cone":"Kon","Target":"Mål","Ladder":"Stege","Blocker":"Block","Hoop":"Ring","Label":"Etikett","Run":"Löpning","Pass / Set":"Pass / Uppspel","Hit / Serve":"Slag / Serve","Lob / arc":"Lobb / båge","Free draw":"Rita fritt","Zone":"Zon","Wind":"Vind","Sun":"Sol","Shot map":"Slagkarta","Undo":"Ångra","Redo":"Gör om","Heatmap":"Värmekarta","Clear":"Rensa","Tools":"Verktyg","Players":"Spelare","Items":"Objekt","Paths":"Banor","Beach + Analysis":"Beach + Analys","Edit":"Redigera","Templates":"Mallar","AI suggest a drill":"AI-förslag","Coaching notes":"Tränaranteckningar","Animation":"Animation","Backdrop (telestrator)":"Bakgrund (telestrator)","Saved drills":"Sparade övningar","Share / data":"Dela / data","Grid":"Rutnät","Present":"Presentera","Share":"Dela","Save":"Spara","Print":"Skriv ut","Playbook":"Spelbok"};
+  var ENDICT={};for(var _k in SVDICT){ENDICT[SVDICT[_k]]=_k;}
+  function setLang(l){
+    try{
+      var map=l==="sv"?SVDICT:ENDICT;
+      var tb=document.querySelectorAll(".tool");for(var i=0;i<tb.length;i++){var tn=tb[i].lastChild;if(tn&&tn.nodeType===3){var t=tn.nodeValue.trim();if(map[t])tn.nodeValue=map[t];}}
+      var gr=document.querySelectorAll(".tgrp");for(var j=0;j<gr.length;j++){var g=gr[j].textContent.trim();if(map[g])gr[j].textContent=map[g];}
+      var hs=document.querySelectorAll(".side h4");for(var m=0;m<hs.length;m++){var h=hs[m].textContent.trim();if(map[h])hs[m].textContent=map[h];}
+      var tt=document.querySelectorAll(".top .tbtn");for(var n=0;n<tt.length;n++){var v=tt[n].textContent.trim();if(map[v])tt[n].textContent=map[v];}
+      lang=l;el("b-lang").textContent=l==="sv"?"EN":"SV";
+    }catch(e){}
+  }
+  el("b-lang").onclick=function(){setLang(lang==="en"?"sv":"en");};
 
   // backdrop
   el("b-bg").onclick=function(){
@@ -523,17 +555,17 @@
     var q=(el("d-search")&&el("d-search").value||"").toLowerCase();var any=false;
     d.forEach(function(it,i){
       if(q&&(it.name||"").toLowerCase().indexOf(q)<0)return;any=true;
-      var tags="";if(it.skill)tags+=tagPill(it.skill,"#e3f4f5","#0a6670");if(it.diff)tags+=tagPill(it.diff,"#efe7fb","#6d4bb0");if(it.corner)tags+=tagPill(it.corner,"#fdeede","#b9772e");
+      var tags="";if(it.skill)tags+=tagPill(it.skill,"#e3f4f5","#0a6670");if(it.diff)tags+=tagPill(it.diff,"#efe7fb","#6d4bb0");if(it.corner)tags+=tagPill(it.corner,"#fdeede","#b9772e");if(it.module)tags+=tagPill(it.module,"#dff3ec","#0a7a52");
       c.insertAdjacentHTML("beforeend",'<div class="srow" style="flex-wrap:wrap"><span data-load="'+i+'" style="cursor:pointer;flex:1">'+esc(it.name)+'</span><span class="x" data-deld="'+i+'">&#10005;</span>'+(tags?'<div style="flex-basis:100%;margin-top:4px">'+tags+'</div>':'')+'</div>');
     });
     if(!any)c.innerHTML='<div class="empty">'+(d.length?'No matches.':'No saved drills yet.')+'</div>';
   }
   el("saved").addEventListener("click",function(e){
     var l=e.target.closest("[data-load]"),x=e.target.closest("[data-deld]");
-    if(l){var d=getDrills()[parseInt(l.getAttribute("data-load"),10)];if(d){state=JSON.parse(JSON.stringify(d.state));el("dname").value=d.name;el("d-skill").value=d.skill||"";el("d-corner").value=d.corner||"";el("d-diff").value=d.diff||"";syncUI();render();renderFrames();}}
+    if(l){var d=getDrills()[parseInt(l.getAttribute("data-load"),10)];if(d){state=JSON.parse(JSON.stringify(d.state));el("dname").value=d.name;el("d-skill").value=d.skill||"";el("d-corner").value=d.corner||"";el("d-diff").value=d.diff||"";el("d-module").value=d.module||"";syncUI();render();renderFrames();}}
     else if(x){var arr=getDrills();arr.splice(parseInt(x.getAttribute("data-deld"),10),1);setDrills(arr);renderSaved();}
   });
-  el("b-save").onclick=function(){var name=el("dname").value.trim()||("Drill "+(getDrills().length+1));var arr=getDrills();arr.push({name:name,state:JSON.parse(JSON.stringify(state)),skill:el("d-skill").value,corner:el("d-corner").value,diff:el("d-diff").value});setDrills(arr);renderSaved();};
+  el("b-save").onclick=function(){var name=el("dname").value.trim()||("Drill "+(getDrills().length+1));var arr=getDrills();arr.push({name:name,state:JSON.parse(JSON.stringify(state)),skill:el("d-skill").value,corner:el("d-corner").value,diff:el("d-diff").value,module:el("d-module").value});setDrills(arr);renderSaved();};
   function syncUI(){el("notes").value=state.notes||"";}
 
   // export
