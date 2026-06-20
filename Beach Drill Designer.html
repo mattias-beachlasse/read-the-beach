@@ -135,6 +135,11 @@
 
     <h4>Coaching notes</h4>
     <textarea id="notes" placeholder="Setup, scoring, coaching points..."></textarea>
+    <div class="row2" style="margin-top:5px">
+      <select id="d-skill"><option value="">Skill...</option><option>Serving</option><option>Passing</option><option>Setting</option><option>Attacking</option><option>Blocking</option><option>Defense</option><option>Movement</option></select>
+      <select id="d-diff"><option value="">Level...</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
+    </div>
+    <select id="d-corner" style="margin-top:5px"><option value="">Corner...</option><option>Technical/Tactical</option><option>Physical</option><option>Psychological</option><option>Social</option></select>
 
     <h4>Animation</h4>
     <div id="frames"></div>
@@ -148,6 +153,7 @@
     <button class="full ghost" id="b-bgclear">Remove image</button>
 
     <h4>Saved drills</h4>
+    <input id="d-search" placeholder="Search saved..." style="width:100%;border:1px solid var(--line);border-radius:8px;padding:7px;font-family:inherit;font-size:.8rem;margin-bottom:6px;background:#fff;color:var(--ink)" />
     <div id="saved"></div>
 
     <h4>Share / data</h4>
@@ -493,6 +499,7 @@
 
   // notes
   el("notes").addEventListener("input",function(){state.notes=el("notes").value;});
+  el("d-search").addEventListener("input",renderSaved);
 
   // toggles
   el("b-grid").onclick=function(){gridOn=!gridOn;this.classList.toggle("on",gridOn);render();};
@@ -510,17 +517,23 @@
   // save / load
   function getDrills(){try{return JSON.parse(lsGet("rtb_designer")||"[]")}catch(e){return []}}
   function setDrills(a){lsSet("rtb_designer",JSON.stringify(a))}
+  function tagPill(t,bg,fg){return '<span style="font-size:.64rem;font-weight:700;background:'+bg+';color:'+fg+';border-radius:999px;padding:2px 7px;margin-right:4px">'+esc(t)+'</span>';}
   function renderSaved(){
     var c=el("saved");c.innerHTML="";var d=getDrills();
-    if(!d.length){c.innerHTML='<div class="empty">No saved drills yet.</div>';return;}
-    d.forEach(function(it,i){c.insertAdjacentHTML("beforeend",'<div class="srow"><span data-load="'+i+'" style="cursor:pointer;flex:1">'+esc(it.name)+'</span><span class="x" data-deld="'+i+'">&#10005;</span></div>');});
+    var q=(el("d-search")&&el("d-search").value||"").toLowerCase();var any=false;
+    d.forEach(function(it,i){
+      if(q&&(it.name||"").toLowerCase().indexOf(q)<0)return;any=true;
+      var tags="";if(it.skill)tags+=tagPill(it.skill,"#e3f4f5","#0a6670");if(it.diff)tags+=tagPill(it.diff,"#efe7fb","#6d4bb0");if(it.corner)tags+=tagPill(it.corner,"#fdeede","#b9772e");
+      c.insertAdjacentHTML("beforeend",'<div class="srow" style="flex-wrap:wrap"><span data-load="'+i+'" style="cursor:pointer;flex:1">'+esc(it.name)+'</span><span class="x" data-deld="'+i+'">&#10005;</span>'+(tags?'<div style="flex-basis:100%;margin-top:4px">'+tags+'</div>':'')+'</div>');
+    });
+    if(!any)c.innerHTML='<div class="empty">'+(d.length?'No matches.':'No saved drills yet.')+'</div>';
   }
   el("saved").addEventListener("click",function(e){
     var l=e.target.closest("[data-load]"),x=e.target.closest("[data-deld]");
-    if(l){var d=getDrills()[parseInt(l.getAttribute("data-load"),10)];if(d){state=JSON.parse(JSON.stringify(d.state));el("dname").value=d.name;syncUI();render();renderFrames();}}
+    if(l){var d=getDrills()[parseInt(l.getAttribute("data-load"),10)];if(d){state=JSON.parse(JSON.stringify(d.state));el("dname").value=d.name;el("d-skill").value=d.skill||"";el("d-corner").value=d.corner||"";el("d-diff").value=d.diff||"";syncUI();render();renderFrames();}}
     else if(x){var arr=getDrills();arr.splice(parseInt(x.getAttribute("data-deld"),10),1);setDrills(arr);renderSaved();}
   });
-  el("b-save").onclick=function(){var name=el("dname").value.trim()||("Drill "+(getDrills().length+1));var arr=getDrills();arr.push({name:name,state:JSON.parse(JSON.stringify(state))});setDrills(arr);renderSaved();};
+  el("b-save").onclick=function(){var name=el("dname").value.trim()||("Drill "+(getDrills().length+1));var arr=getDrills();arr.push({name:name,state:JSON.parse(JSON.stringify(state)),skill:el("d-skill").value,corner:el("d-corner").value,diff:el("d-diff").value});setDrills(arr);renderSaved();};
   function syncUI(){el("notes").value=state.notes||"";}
 
   // export
