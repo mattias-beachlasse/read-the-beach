@@ -587,7 +587,15 @@
   function renderDrills(cat){
     var items=allItems().filter(function(it){return it.kind==="drill"});
     if(cat&&cat!=="all"){var ids=drills.filter(function(d){return d.cat===cat}).map(function(d){return d.id});items=items.filter(function(it){return ids.indexOf(it.id)>=0});}
-    renderGrid("drill-grid",items);
+    var g=el("drill-grid"); g.innerHTML="";
+    items.forEach(function(it){g.insertAdjacentHTML("beforeend",cardHtml(it))});
+    if(!cat||cat==="all"){
+      var dd=[];try{dd=JSON.parse(localStorage.getItem("rtb_designer")||"[]")}catch(e){}
+      dd.forEach(function(d){var nm=(d.name||"Untitled").replace(/</g,"&lt;");
+        g.insertAdjacentHTML("beforeend",'<a class="card clickable" href="Beach%20Drill%20Designer.html" style="text-decoration:none;display:block"><div class="thumb">DESIGNED</div><div class="body"><div class="tagrow"><span class="tag soc">Designed</span></div><h3>'+nm+'</h3><p class="meta">Open in the Drill Designer</p></div></a>');
+      });
+    }
+    if(!g.children.length)g.innerHTML='<p class="empty">Nothing here yet.</p>';
   }
   function chipMarkup(){
     var c=el("drill-chips"); c.innerHTML="";
@@ -631,6 +639,12 @@
       c.insertAdjacentHTML("beforeend",
         '<div class="pick"><div><div class="t">'+d.title+'</div><div class="s">'+tagHtml(d.tag)+' '+d.dur+' min</div></div>'+
         '<button class="btn btn-out btn-sm" data-add="'+d.id+'">+ Add</button></div>');
+    });
+    var dd=[];try{dd=JSON.parse(localStorage.getItem("rtb_designer")||"[]")}catch(e){}
+    dd.forEach(function(d){var nm=(d.name||"Untitled").replace(/</g,"&lt;");
+      c.insertAdjacentHTML("beforeend",
+        '<div class="pick"><div><div class="t">'+nm+'</div><div class="s"><span class="tag soc">Designed</span> 12 min</div></div>'+
+        '<button class="btn btn-out btn-sm" data-add="dz::'+nm+'">+ Add</button></div>');
     });
   }
   function planList(){return getJSON("rtb_curplan",[])}
@@ -688,7 +702,9 @@
       else if(kind==="drill"||kind==="film"){/* could open detail; keep simple */}
       return;}
     var add=e.target.closest("[data-add]");
-    if(add){var id=add.getAttribute("data-add");var d=null;drills.forEach(function(x){if(x.id===id)d=x;});if(d){var l=planList();l.push({title:d.title,dur:d.dur});setJSON("rtb_curplan",l);renderPlan();}return;}
+    if(add){var id=add.getAttribute("data-add");
+      if(id.indexOf("dz::")===0){var t=id.slice(4);var l2=planList();l2.push({title:t,dur:12});setJSON("rtb_curplan",l2);renderPlan();return;}
+      var d=null;drills.forEach(function(x){if(x.id===id)d=x;});if(d){var l=planList();l.push({title:d.title,dur:d.dur});setJSON("rtb_curplan",l);renderPlan();}return;}
     var rm=e.target.closest("[data-rm]");
     if(rm){var l=planList();l.splice(parseInt(rm.getAttribute("data-rm"),10),1);setJSON("rtb_curplan",l);renderPlan();return;}
     var dp=e.target.closest("[data-delplan]");
