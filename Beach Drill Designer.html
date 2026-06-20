@@ -301,7 +301,7 @@
   function snapshot(){history.push(JSON.stringify(state));if(history.length>40)history.shift();}
   function undo(){if(!history.length)return;state=JSON.parse(history.pop());syncUI();render();renderFrames();}
 
-  var drag=null, arrowDraft=null;
+  var drag=null, arrowDraft=null, animId=0;
   function defaultLabel(type){
     if(type==="A"){var n=state.tokens.filter(function(t){return t.type==="A"}).length+1;return "A"+n;}
     if(type==="B"){var n2=state.tokens.filter(function(t){return t.type==="B"}).length+1;return "B"+n2;}
@@ -389,6 +389,7 @@
   el("b-clearframes").onclick=function(){state.frames=[];renderFrames();};
   el("b-play").onclick=function(){playAll();};
   function playAll(){
+    var myGen=++animId;
     var acts=state.arrows.filter(function(a){return isActionArrow(a.kind);});
     var hasFrames=state.frames.length>=2;
     if(acts.length===0&&!hasFrames){alert("Draw paths or capture 2+ frames to animate.");return;}
@@ -399,6 +400,7 @@
     var orig=state.tokens.map(function(t){return {id:t.id,x:t.x,y:t.y};});
     var t0=null;
     function tick(ts){
+      if(myGen!==animId)return;
       if(t0==null)t0=ts;var prog=Math.min(1,(ts-t0)/totalDur);
       if(ball&&ballSegs>0){var bp=prog*ballSegs;var bi=Math.min(ballSegs-1,Math.floor(bp));var bk=bp-bi;var pos=pointOnPath(acts[bi],bk);ball.x=Math.round(pos.x);ball.y=Math.round(pos.y);}
       if(hasFrames){var fpp=prog*frameSegs;var fi=Math.min(frameSegs-1,Math.floor(fpp));var fk=fpp-fi;var from=state.frames[fi],to=state.frames[fi+1];to.forEach(function(tp){if(ball&&tp.id===ball.id)return;var ff=findIn(from,tp.id)||tp;var tok=findToken(tp.id);if(tok){tok.x=Math.round(ff.x+(tp.x-ff.x)*fk);tok.y=Math.round(ff.y+(tp.y-ff.y)*fk);}});}
@@ -437,6 +439,7 @@
       return {x:mt*mt*p0[0]+2*mt*k*cx+k*k*p1[0],y:mt*mt*p0[1]+2*mt*k*cy+k*k*p1[1]};
     }
     if(a.kind==="draw"){var n=a.pts.length-1;if(n<1)return {x:p0[0],y:p0[1]};var f=k*n;var idx=Math.floor(f);if(idx>=n)idx=n-1;var lt=f-idx;var A=a.pts[idx],B=a.pts[idx+1];return {x:A[0]+(B[0]-A[0])*lt,y:A[1]+(B[1]-A[1])*lt};}
+    if(a.c){var mt2=1-k;return {x:mt2*mt2*p0[0]+2*mt2*k*a.c[0]+k*k*p1[0],y:mt2*mt2*p0[1]+2*mt2*k*a.c[1]+k*k*p1[1]};}
     return {x:p0[0]+(p1[0]-p0[0])*k,y:p0[1]+(p1[1]-p0[1])*k};
   }
   function playFrames(){
