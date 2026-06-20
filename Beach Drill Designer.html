@@ -252,6 +252,7 @@
     }
     var mk=a.kind==="pass"?"url(#mkPass)":(a.kind==="hit"?"url(#mkHit)":"url(#mkMove)");
     var dash=a.kind==="pass"?'stroke-dasharray="9 7"':'';
+    if(a.c){return '<path d="M'+p0[0]+','+p0[1]+' Q'+a.c[0]+','+a.c[1]+' '+p1[0]+','+p1[1]+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" '+dash+' marker-end="'+mk+'"/>';}
     return '<line x1="'+p0[0]+'" y1="'+p0[1]+'" x2="'+p1[0]+'" y2="'+p1[1]+'" stroke="'+col+'" stroke-width="'+w+'" '+dash+' marker-end="'+mk+'"/>';
   }
   function isActionArrow(k){return k==="move"||k==="pass"||k==="hit"||k==="arc";}
@@ -264,12 +265,29 @@
     return s;
   }
   var preview=null;
+  function findArrow(id){for(var i=0;i<state.arrows.length;i++){if(state.arrows[i].id===id)return state.arrows[i];}return null;}
+  function handlesSVG(){
+    if(tool!=="select")return "";
+    var s="";
+    state.arrows.forEach(function(a){
+      if(a.kind==="zone"||a.kind==="draw")return;
+      var p0=a.pts[0],p1=a.pts[a.pts.length-1];if(!p0||!p1)return;
+      s+='<circle data-h="'+a.id+':start" cx="'+p0[0]+'" cy="'+p0[1]+'" r="6" fill="#fff" stroke="#0a6670" stroke-width="2" style="cursor:grab"/>';
+      s+='<circle data-h="'+a.id+':end" cx="'+p1[0]+'" cy="'+p1[1]+'" r="6" fill="#fff" stroke="#0a6670" stroke-width="2" style="cursor:grab"/>';
+      if(a.kind==="move"||a.kind==="pass"||a.kind==="hit"){
+        var c=a.c||[Math.round((p0[0]+p1[0])/2),Math.round((p0[1]+p1[1])/2)];
+        s+='<circle data-h="'+a.id+':ctrl" cx="'+c[0]+'" cy="'+c[1]+'" r="5" fill="#e8b06b" stroke="#9a7415" stroke-width="2" style="cursor:grab"/>';
+      }
+    });
+    return s;
+  }
   function render(){
     var s=defs()+courtSVG();
     state.arrows.forEach(function(a){s+=arrowSVG(a)});
     if(preview)s+=preview;
     s+=seqBadges();
     state.tokens.forEach(function(t){s+=tokenSVG(t)});
+    s+=handlesSVG();
     svg.innerHTML=s;
   }
   function esc(x){return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
@@ -299,7 +317,9 @@
     var p=pt(e);
     var g=e.target.closest?e.target.closest(".token"):null;
     if(tool==="select"){
-      if(g){var t=findToken(g.getAttribute("data-id"));if(t){drag={t:t,dx:p.x-t.x,dy:p.y-t.y,moved:false};snapshot();try{svg.setPointerCapture(e.pointerId)}catch(err){}}}
+      var hb=e.target.closest?e.target.closest("[data-h]"):null;
+      if(hb){var hp=hb.getAttribute("data-h").split(":");var aa=findArrow(hp[0]);if(aa){drag={kind:"handle",a:aa,h:hp[1],moved:false};snapshot();try{svg.setPointerCapture(e.pointerId)}catch(err){}}return;}
+      if(g){var t=findToken(g.getAttribute("data-id"));if(t){drag={kind:"token",t:t,dx:p.x-t.x,dy:p.y-t.y,moved:false};snapshot();try{svg.setPointerCapture(e.pointerId)}catch(err){}}}
       return;
     }
     if(tool==="delete"){
@@ -315,7 +335,9 @@
     if(isTokenTool(tool))addToken(tool,p.x,p.y);
   });
   svg.addEventListener("pointermove",function(e){
-    if(drag){var p=pt(e);drag.t.x=Math.round(p.x-drag.dx);drag.t.y=Math.round(p.y-drag.dy);drag.moved=true;render();return;}
+    if(drag){var p=pt(e);
+      if(drag.kind==="handle"){var a=drag.a;if(drag.h==="start")a.pts[0]=[Math.round(p.x),Math.round(p.y)];else if(drag.h==="end")a.pts[a.pts.length-1]=[Math.round(p.x),Math.round(p.y)];else a.c=[Math.round(p.x),Math.round(p.y)];drag.moved=true;render();return;}
+      drag.t.x=Math.round(p.x-drag.dx);drag.t.y=Math.round(p.y-drag.dy);drag.moved=true;render();return;}
     if(arrowDraft){var p2=pt(e);
       if(arrowDraft.kind==="draw"){arrowDraft.pts.push([Math.round(p2.x),Math.round(p2.y)]);}
       else{arrowDraft.pts[1]=[Math.round(p2.x),Math.round(p2.y)];}
@@ -342,7 +364,7 @@
     if(tl==="_clear"){if(confirm("Clear the whole drill?")){snapshot();state.tokens=[];state.arrows=[];state.frames=[];render();renderFrames();}return;}
     tool=tl;
     var all=document.querySelectorAll(".tool");for(var i=0;i<all.length;i++){all[i].classList.remove("active");}
-    b.classList.add("active");setHint();
+    b.classList.add("active");setHint();render();
   });
   function setHint(){
     var h=el("hint");
